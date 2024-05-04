@@ -22,24 +22,20 @@ export default function Academia() {
   useEffect(() => {
     if (!getCookie('token')) router.push('/login');
 
-    setTimeout(() => {
-      const todayScroll = document.getElementById('today');
-
-      todayScroll?.scrollIntoView();
-    }, 2000);
-  }, []);
-
-  useEffect(() => {
-    if (userInfo) {
+    const c = localStorage.getItem('calendar');
+    if (c && JSON.parse(c).expireAt > Date.now()) setCalendar(JSON.parse(c));
+    else
       fetch(`${URL}/api/calendar`, {
+        next: { revalidate: 31 * 24 * 3600 },
         method: 'GET',
+        cache: 'force-cache',
         headers: {
           'X-CSRF-Token': getCookie('token') as string,
           'Set-Cookie': getCookie('token') as string,
           Cookie: getCookie('token') as string,
           Connection: 'keep-alive',
           'Accept-Encoding': 'gzip, deflate, br, zstd',
-          'Cache-Control': 's-maxage=86400, stale-while-revalidate=7200',
+          'Cache-Control': 'public, s-maxage=86400',
         },
       })
         .then((r) => r.json())
@@ -48,12 +44,17 @@ export default function Academia() {
             clearCookies();
             window.location.reload();
           } else {
+            localStorage.setItem('calendar', JSON.stringify(res));
             setCalendar(res);
           }
         })
         .catch(() => {});
-    }
-  }, [userInfo]);
+
+    setTimeout(() => {
+      const todayScroll = document.getElementById('today');
+      todayScroll?.scrollIntoView();
+    }, 2000);
+  }, []);
 
   useEffect(() => {
     setPage(new Date().getMonth());

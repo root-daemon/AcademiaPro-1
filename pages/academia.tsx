@@ -18,7 +18,6 @@ const TimeTableComponent = dynamic(
 );
 
 import type { AttendanceResponse } from '@/types/Attendance';
-import type { DayOrderResponse } from '@/types/DayOrder';
 import type { MarksResponse } from '@/types/Marks';
 import type { TimeTableResponse } from '@/types/TimeTable';
 
@@ -90,33 +89,36 @@ export default function Academia() {
 
   useEffect(() => {
     if (userInfo) {
-      fetch(`${URL}/api/attendance`, {
-        cache: 'default',
-        next: { revalidate: 3600 },
-        method: 'GET',
-        headers: {
-          'X-CSRF-Token': getCookie('token') as string,
-          'Set-Cookie': getCookie('token') as string,
-          Cookie: getCookie('token') as string,
-          Connection: 'keep-alive',
-          'Accept-Encoding': 'gzip, deflate, br, zstd',
-          'Cache-Control': 'private, maxage=86400, stale-while-revalidate=7200',
-        },
-      })
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.token_refresh) {
-            clearCookies();
-            window.location.reload();
-          } else {
-            localStorage.setItem('attendance', JSON.stringify(res));
-            setAttendance(res);
-          }
+      if (!attendance || attendance.expireAt < Date.now())
+        fetch(`${URL}/api/attendance`, {
+          next: { revalidate: 2 * 3600 },
+          cache: 'default',
+          method: 'GET',
+          headers: {
+            'X-CSRF-Token': getCookie('token') as string,
+            'Set-Cookie': getCookie('token') as string,
+            Cookie: getCookie('token') as string,
+            Connection: 'keep-alive',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Cache-Control':
+              'private, maxage=86400, stale-while-revalidate=7200',
+          },
         })
-        .catch(() => {});
+          .then((r) => r.json())
+          .then((res) => {
+            if (res.token_refresh) {
+              clearCookies();
+              window.location.reload();
+            } else {
+              localStorage.setItem('attendance', JSON.stringify(res));
+              setAttendance(res);
+            }
+          })
+          .catch(() => {});
 
-      if (!table?.table) {
+      if (table && (!table?.table || table.expireAt < Date.now())) {
         fetch(`${URL}/api/timetable?batch=${userInfo?.userInfo?.batch}`, {
+          next: { revalidate: 30 * 24 * 3600 },
           cache: 'default',
           method: 'GET',
           headers: {
@@ -142,30 +144,32 @@ export default function Academia() {
           .catch(() => {});
       }
 
-      fetch(`${URL}/api/marks`, {
-        cache: 'default',
-        next: { revalidate: 3600 },
-        method: 'GET',
-        headers: {
-          'X-CSRF-Token': getCookie('token') as string,
-          'Set-Cookie': getCookie('token') as string,
-          Cookie: getCookie('token') as string,
-          Connection: 'keep-alive',
-          'Accept-Encoding': 'gzip, deflate, br, zstd',
-          'Cache-Control': 'private, maxage=86400, stale-while-revalidate=7200',
-        },
-      })
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.token_refresh) {
-            clearCookies();
-            window.location.reload();
-          } else {
-            localStorage.setItem('marks', JSON.stringify(res));
-            setMarks(res);
-          }
+      if (!marks || marks.expireAt < Date.now())
+        fetch(`${URL}/api/marks`, {
+          cache: 'default',
+          next: { revalidate: 2 * 3600 },
+          method: 'GET',
+          headers: {
+            'X-CSRF-Token': getCookie('token') as string,
+            'Set-Cookie': getCookie('token') as string,
+            Cookie: getCookie('token') as string,
+            Connection: 'keep-alive',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            'Cache-Control':
+              'private, maxage=86400, stale-while-revalidate=7200',
+          },
         })
-        .catch(() => {});
+          .then((r) => r.json())
+          .then((res) => {
+            if (res.token_refresh) {
+              clearCookies();
+              window.location.reload();
+            } else {
+              localStorage.setItem('marks', JSON.stringify(res));
+              setMarks(res);
+            }
+          })
+          .catch(() => {});
     }
   }, [userInfo]);
 
