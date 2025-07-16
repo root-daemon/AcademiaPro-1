@@ -122,13 +122,7 @@ export default async function RootLayout({
 						/>
 
 						<body className="h-screen">
-							<Script
-								defer
-								src="https://static.cloudflareinsights.com/beacon.min.js"
-								data-cf-beacon='{"token": "be7e879176fc4899a6d71d2cf9383fd5"}'
-								strategy="afterInteractive"
-							/>
-
+							
 							{children}
 						</body>
 					</ThemeProvider>
