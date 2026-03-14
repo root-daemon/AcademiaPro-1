@@ -8,11 +8,10 @@ export default async function DayOrder({
 	mini?: boolean;
 	className?: string;
 }) {
-	const calendar = await fetchCalendar();
-	const today = calendar?.today;
+	const { today } = await fetchCalendar();
+
 	const day = today?.dayOrder;
 
-	if (!today) return null;
 	return (
 		<div
 			role="banner"

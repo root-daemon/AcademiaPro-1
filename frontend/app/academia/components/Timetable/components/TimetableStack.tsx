@@ -20,9 +20,8 @@ export default function TimetableStack({
 	ophours: string[];
 }) {
 	const [dOrder, setDo] = useState<string>(
-	        today ? (today.dayOrder === "-" ? "0" : today.dayOrder) : "0",
+		today?.dayOrder === "-" ? "0" : today?.dayOrder,
 	);
-
 	const [currentTime, setTime] = useState<Date>(getIstTime());
 
 	const scheduleToday =
