@@ -1,3 +1,4 @@
+import CookieUpdater from "@/components/CookieUpdater";
 import { Sidebar } from "@/components/Sidebar";
 import DayOrder from "@/components/Sidebar/Badges/DayOrder";
 import ProfileBadge from "@/components/Sidebar/ProfileBadge";
@@ -16,6 +17,7 @@ export default async function RootLayout({
 
 	return (
 		<div className="h-screen shrink-0 w-full flex flex-row bg-light-background-normal lg:p-2 transition-all duration-150 text-light-color dark:bg-dark-background-normal dark:text-dark-color">
+			{json?.newCookies && <CookieUpdater cookies={json.newCookies} />}
 			<div id="attendance-predict" className="z-30" />
 			<Sidebar
 				dayorder={<DayOrder />}

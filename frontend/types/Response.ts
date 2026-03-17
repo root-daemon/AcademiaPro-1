@@ -20,6 +20,7 @@ export interface AllResponse {
 	ratelimit?: boolean;
 	error?: string;
 	status: number;
+	newCookies?: string;
 }
 
 export interface Marks {
