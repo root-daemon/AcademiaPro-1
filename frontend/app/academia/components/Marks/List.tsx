@@ -7,9 +7,15 @@ import type { Course } from "@/types/Course";
 export default function List({
 	list,
 	courses,
+	grades,
+	updateGrade,
+	excludedCourses,
 }: {
 	list: Mark[];
 	courses: Course[];
+	grades: { [courseCode: string]: string };
+	updateGrade: (courseCode: string, grade: string, exclude?: boolean) => void;
+	excludedCourses: string[];
 }) {
 	return (
 		<>
@@ -25,6 +31,9 @@ export default function List({
 							key={index}
 							mark={list?.find((a) => a.courseCode === course.code)}
 							course={course}
+							currentGrade={grades[course.code]}
+							updateGrade={updateGrade}
+							excludedCourses={excludedCourses}
 						/>
 					))}
 			</div>
@@ -42,6 +51,9 @@ export default function List({
 								key={index}
 								mark={list?.find((a) => a.courseCode === course.code)}
 								course={course}
+								currentGrade={grades[course.code]}
+								updateGrade={updateGrade}
+								excludedCourses={excludedCourses}
 							/>
 						))}
 				</div>
