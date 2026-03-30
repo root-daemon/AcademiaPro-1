@@ -1,4 +1,10 @@
-const serverUrls = [process.env.NEXT_PUBLIC_URL];
+function ensureProtocol(url: string | undefined): string {
+	if (!url) return "";
+	if (!/^https?:\/\//i.test(url)) return `https://${url}`;
+	return url;
+}
+
+const serverUrls = [ensureProtocol(process.env.NEXT_PUBLIC_URL)];
 
 export const revalUrl = serverUrls[0];
 
