@@ -7,6 +7,7 @@ import TableCell from "./TableCell";
 import { getIstTime, Time } from "@/utils/Times";
 import { timeRange } from "@/utils/Range";
 import { useInterval } from "@/utils/Interval";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function TimetableStack({
 	schedule,
@@ -65,16 +66,31 @@ export default function TimetableStack({
 
 	return (
 		<>
+			<AnimatePresence mode="wait">
 			{dOrder === "0" ? (
-				<div className="my-4 dark:bg-dark-background-normal h-32 bg-light-background-dark rounded-2xl p-1">
+				<motion.div
+					key={dOrder}
+					className="my-4 dark:bg-dark-background-normal h-32 bg-light-background-dark rounded-2xl p-1"
+					initial={{ opacity: 0, x: 10 }}
+					animate={{ opacity: 1, x: 0 }}
+					exit={{ opacity: 0, x: -10 }}
+					transition={{ duration: 0.2 }}
+				>
 					<div className="w-full rounded-xl h-full bg-light-error-background dark:bg-dark-error-background flex items-center justify-center">
 						<h1 className="text-center text-3xl font-medium text-light-error-color dark:text-dark-error-color">
 							Holiday
 						</h1>
 					</div>
-				</div>
+				</motion.div>
 			) : (
-				<div className="my-4 lg:w-full md:min-w-[600px] md:w-full lg:h-32 dark:bg-dark-background-normal bg-light-background-dark rounded-2xl flex flex-col p-1">
+				<motion.div
+					key={dOrder}
+					className="my-4 lg:w-full md:min-w-[600px] md:w-full lg:h-32 dark:bg-dark-background-normal bg-light-background-dark rounded-2xl flex flex-col p-1"
+					initial={{ opacity: 0, x: 10 }}
+					animate={{ opacity: 1, x: 0 }}
+					exit={{ opacity: 0, x: -10 }}
+					transition={{ duration: 0.2 }}
+				>
 					<div className="grid-cols-10 hidden h-6 lg:grid">
 						{[...Array(10)].map((_, index) => (
 							<span
@@ -115,8 +131,9 @@ export default function TimetableStack({
 							))}
 						</div>
 					</div>
-				</div>
+				</motion.div>
 			)}
+			</AnimatePresence>
 			<div className="flex items-center justify-center gap-4">
 				<div className="flex items-center justify-center gap-2">
 					<button

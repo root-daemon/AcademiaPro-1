@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-
 const protectedRoutes = [
 	"/academia",
 	"/academia/courses",
@@ -12,11 +11,11 @@ const home = ["/"];
 const MAINTENANCE = false;
 
 const isAuthenticated = (request: NextRequest): boolean => {
-    const token = request.cookies.get("key");
-    return !!token?.value;
+	const token = request.cookies.get("key");
+	return !!token?.value;
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
 	if (MAINTENANCE && pathname !== "/maintenance") {

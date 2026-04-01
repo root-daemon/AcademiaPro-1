@@ -25,24 +25,26 @@ export default function List({
 							key={index}
 							mark={list?.find((a) => a.courseCode === course.code)}
 							course={course}
+							delay={index * 0.06}
 						/>
-					))}
-			</div>
+						))}
+						</div>
 
-			{courses?.filter((a) => a.slotType === "Practical")?.[0] && (
-					<Indicator type="Practical" separator />
-				)}
+						{courses?.filter((a) => a.slotType === "Practical")?.[0] && (
+						<Indicator type="Practical" separator />
+						)}
 
-			{courses?.filter((a) => a.slotType === "Practical")[0] && (
-				<div className="mt-4 grid animate-fadeIn grid-cols-marks gap-2 transition-all duration-200">
-					{courses
+						{courses?.filter((a) => a.slotType === "Practical")[0] && (
+						<div className="mt-4 grid animate-fadeIn grid-cols-marks gap-2 transition-all duration-200">
+						{courses
 						?.filter((a) => a.slotType === "Practical")
 						.map((course, index) => (
 							<MarkCard
 								key={index}
 								mark={list?.find((a) => a.courseCode === course.code)}
 								course={course}
-							/>
+								delay={index * 0.06}
+						/>
 						))}
 				</div>
 			)}
