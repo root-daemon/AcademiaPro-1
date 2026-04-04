@@ -7,6 +7,4 @@ export async function GET(req: Request) {
 	return Response.redirect(`${decodedId}`);
 }
 
-export const config = {
-	runtime: "edge",
-};
+export const runtime = "edge";

@@ -9,6 +9,7 @@ import { ViewTransitions } from "next-view-transitions";
 import ErrorBoundary from "./Boundary";
 import type { ReactNode } from "react";
 import Script from "next/script";
+import { SerwistProvider } from "./serwist";
 
 const APP_NAME = "ClassPro";
 const APP_DEFAULT_TITLE = "ClassPro";
@@ -94,6 +95,7 @@ export default async function RootLayout({
 		<html
 			lang="en"
 			className={`dark h-screen bg-light-background-normal dark:bg-dark-background-normal ${GeistSans.variable} ${GeistMono.variable}`}
+			data-scroll-behavior="smooth"
 		>
 			<ErrorBoundary>
 				<ThemeProvider>
@@ -121,7 +123,8 @@ export default async function RootLayout({
 					/>
 
 					<body className="h-screen">
-						<ViewTransitions>
+						<SerwistProvider swUrl="/serwist/sw.js">
+							<ViewTransitions>
 							<Script
 								defer
 								src="https://static.cloudflareinsights.com/beacon.min.js"
@@ -130,7 +133,8 @@ export default async function RootLayout({
 							/>
 
 							{children}
-						</ViewTransitions>
+							</ViewTransitions>
+						</SerwistProvider>
 					</body>
 				</ThemeProvider>
 			</ErrorBoundary>

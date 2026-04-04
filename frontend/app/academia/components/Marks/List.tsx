@@ -34,13 +34,14 @@ export default function List({
 							currentGrade={grades[course.code]}
 							updateGrade={updateGrade}
 							excludedCourses={excludedCourses}
+							delay={index * 0.06}
 						/>
 					))}
 			</div>
 
 			{courses?.filter((a) => a.slotType === "Practical")?.[0] && (
-					<Indicator type="Practical" separator />
-				)}
+				<Indicator type="Practical" separator />
+			)}
 
 			{courses?.filter((a) => a.slotType === "Practical")[0] && (
 				<div className="mt-4 grid animate-fadeIn grid-cols-marks gap-2 transition-all duration-200">
@@ -54,6 +55,7 @@ export default function List({
 								currentGrade={grades[course.code]}
 								updateGrade={updateGrade}
 								excludedCourses={excludedCourses}
+								delay={index * 0.06}
 							/>
 						))}
 				</div>

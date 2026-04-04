@@ -1,4 +1,6 @@
-import { defaultCache } from "@serwist/next/worker";
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+import { defaultCache } from "@serwist/turbopack/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
 
@@ -39,7 +41,7 @@ const serwist = new Serwist({
 });
 
 // Notification Handler
-self.addEventListener("push", (event) => {
+self.addEventListener("push", (event: PushEvent) => {
 	const options = {
 		body: event.data?.text() ?? "No payload",
 		icon: "/icon.png",
@@ -52,7 +54,7 @@ self.addEventListener("push", (event) => {
 });
 
 // Cache
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", (event: FetchEvent) => {
 	if (event.request.url === "/academia") {
 		return false;
 	}

@@ -1,6 +1,8 @@
+"use client";
 import type { ScheduleSlot } from "@/types/Timetable";
 import { timeRange } from "@/utils/Range";
 import { Time, timeConvert } from "@/utils/Times";
+import { motion } from "motion/react";
 import React from "react";
 
 export default function TableCell({
@@ -27,6 +29,13 @@ export default function TableCell({
 		<div
 			className={`border-[0.3px] flex flex-col text-black group relative justify-between items-start ${!cell || cell.isOptional ? "bg-white/80 dark:bg-black/60" : isClassGoing ? (inRange ? "" : "bg-white/30 dark:bg-black/30") : ""} border-dark-background-dark/60 ${first ? "lg:first:rounded-l-xl first:rounded-t-xl lg:first:rounded-tr-none" : ""} ${last ? "lg:last:rounded-r-xl lg:last:rounded-bl-none last:rounded-b-xl" : ""}`}
 		>
+			{inRange && isClassGoing && cell && (
+				<motion.div
+					className="absolute left-0 top-0 h-full w-[3px] bg-white/90 rounded-full"
+					animate={{ opacity: [0.4, 1, 0.4] }}
+					transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+				/>
+			)}
 			<div
 				className={`flex flex-col min-h-16 relative h-full w-full p-2 justify-between items-start ${cell?.isOptional ? "opacity-40" : ""}`}
 			>

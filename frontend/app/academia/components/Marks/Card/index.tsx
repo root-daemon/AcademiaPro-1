@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import type { Mark } from "@/types/Marks";
 import TotalSection from "./Total";
 import MarkList from "./MarkList";
@@ -40,12 +41,14 @@ export default function MarkCard({
 	currentGrade,
 	updateGrade,
 	excludedCourses,
+	delay,
 }: {
 	mark: Mark | undefined;
 	course: Course;
 	currentGrade?: string;
 	updateGrade?: (courseCode: string, grade: string, exclude?: boolean) => void;
 	excludedCourses?: string[];
+	delay?: number;
 }) {
 	const [expanded, setExpanded] = useState(false);
 	const [editMode, setEditMode] = useState(false);
@@ -95,10 +98,17 @@ export default function MarkCard({
 	};
 
 	return (
-		<div className="relative flex flex-col items-center">
-			<div
+		<motion.div
+			className="relative flex flex-col items-center"
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.35, delay: delay ?? 0 }}
+		>
+			<motion.div
 				title={`${course.title} (${course.code})`}
 				className={`relative flex h-full min-h-[195px] w-full flex-col ${course?.credit === "0" ? "border-x-2 border-light-background-light dark:border-dark-background-light" : "border-transparent"} justify-between gap-3 rounded-3xl border bg-light-background-normal p-4 px-5 pb-5 dark:bg-dark-background-normal`}
+				whileHover={{ y: -2 }}
+				transition={{ duration: 0.2 }}
 			>
 				<div className="flex h-full flex-col gap-4">
 					<div className="flex w-full items-start justify-between gap-2">
@@ -328,7 +338,7 @@ export default function MarkCard({
 						)}
 					</div>
 				)}
-			</div>
+			</motion.div>
 			{course?.credit === "0" && (
 				<div className="absolute -bottom-3 z-10 mx-auto my-0.5 w-fit rounded-full border border-light-background-light bg-light-background-dark px-3 py-0.5 dark:border-dark-background-light dark:bg-dark-background-light">
 					<p className="text-center font-mono text-[10px] text-light-color opacity-40 dark:text-dark-color">
@@ -336,6 +346,6 @@ export default function MarkCard({
 					</p>
 				</div>
 			)}
-		</div>
+		</motion.div>
 	);
 }
