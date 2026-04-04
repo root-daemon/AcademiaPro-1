@@ -31,6 +31,8 @@ export default async function fetchCal() {
 		},
 	});
 
+	if (!a.ok) throw new Error(`Calendar fetch failed: ${a.status}`);
+
 	const json: CalendarResponse = await a.json();
 
 	if (json.ratelimit) redirect("/ratelimit");

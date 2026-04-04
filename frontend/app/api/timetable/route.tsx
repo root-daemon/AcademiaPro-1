@@ -18,12 +18,19 @@ export async function GET() {
 		.eq("token", encode(key))
 		.single();
 
-	if (error) {
-		throw new Error("Data not found!")
+	if (error || !data?.timetable) {
+		return new Response('Data not found', { status: 404 });
+	}
+
+	let parsed: ReturnType<typeof JSON.parse>;
+	try {
+		parsed = JSON.parse(data.timetable);
+	} catch {
+		return new Response('Invalid timetable data', { status: 500 });
 	}
 
 	const json = {
-		timetable: JSON.parse(data?.timetable),
+		timetable: parsed,
 		ophour: data?.ophour,
 	}
 

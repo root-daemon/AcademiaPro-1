@@ -8,15 +8,20 @@ export default function Logout() {
 
 	useEffect(() => {
 		(async () => {
-			const a = await fetch("/api/logout", {
-				method: "DELETE",
-			});
+			try {
+				const a = await fetch("/api/logout", {
+					method: "DELETE",
+				});
 
-			const body = await a.json();
-			console.info(body);
-			if (a.ok) router.push("/");
+				const body = await a.json();
+				console.info(body);
+				if (a.ok) router.push("/");
+				else router.push("/");
+			} catch {
+				router.push("/");
+			}
 		})();
-	}, []);
+	}, [router]);
 
 	return (
 		<main className="flex h-screen w-screen animate-fadeIn flex-col items-center justify-center p-12 text-light-accent dark:text-dark-accent">

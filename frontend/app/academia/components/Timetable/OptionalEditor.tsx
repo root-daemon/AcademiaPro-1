@@ -43,6 +43,10 @@ function OptionalHours({
 					alert("Saved successfully");
 					window.location.reload();
 				} else alert("An error occured! x_x");
+			})
+			.catch(() => {
+				setButton(false);
+				alert("Network error. Please try again.");
 			});
 	}
 
