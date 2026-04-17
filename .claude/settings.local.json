@@ -3,7 +3,11 @@
     "allow": [
       "Bash(find:*)",
       "Bash(tree:*)",
-      "Bash(go build:*)"
+      "Bash(go build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(npx tsc *)",
+      "Bash(node_modules/.bin/tsc --noEmit)"
     ]
   }
 }
