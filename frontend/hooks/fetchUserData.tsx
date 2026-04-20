@@ -11,7 +11,12 @@ const dataCache: Map<string, { data: AllResponse; timestamp: number }> =
 
 async function fetchData(): Promise<AllResponse> {
 	const cookie = (await cookies()).get("key");
-	const userKey = `key-${cookie?.value}`;
+
+	if (!cookie?.value) {
+		return {} as AllResponse;
+	}
+
+	const userKey = `key-${cookie.value}`;
 
 	const cachedData = dataCache.get(userKey);
 	const now = Date.now();
