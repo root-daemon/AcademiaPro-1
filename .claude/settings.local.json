@@ -7,7 +7,20 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Bash(npx tsc *)",
-      "Bash(node_modules/.bin/tsc --noEmit)"
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(git -C /Users/root-daemon/Programming/classpro status)",
+      "Bash(git -C /Users/root-daemon/Programming/classpro diff)",
+      "Bash(git *)",
+      "WebFetch(domain:sp.srmist.edu.in)",
+      "Bash(curl -s -c /tmp/sp_cookies.txt -L -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://sp.srmist.edu.in/srmiststudentportal/students/loginManager/youLogin.jsp\" -o /tmp/sp_login.html -D /tmp/sp_headers.txt -w \"STATUS:%{http_code}\\\\nSIZE:%{size_download}\\\\n\")",
+      "Read(//tmp/**)",
+      "Bash(go vet *)",
+      "Bash(go run *)",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(bunx tsc *)"
     ]
   }
 }

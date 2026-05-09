@@ -10,88 +10,167 @@ import Link from "next/link";
 import { setCookie } from "@/utils/Cookies";
 import { BiChevronLeft } from "react-icons/bi";
 
+type LoginRequestBody = {
+	account: string;
+	password: string;
+	captcha?: string;
+	cdigest?: string;
+	spCaptcha?: string;
+	spState?: string;
+};
+
+type LoginResponse = {
+	authenticated: boolean;
+	cookies?: string;
+	spCookies?: string;
+	message?: string;
+	captcha?: { image: string; cdigest: string };
+	spCaptcha?: { image: string; state: string };
+};
+
 export default function Form() {
 	const router = useTransitionRouter();
 	const [uid, setUid] = useState("");
 	const [pass, setPass] = useState("");
+
+	// Academia (academia.srmist.edu.in) captcha — only present when required.
 	const [captchaInput, setCaptchaInput] = useState("");
 	const [captchaImage, setCaptchaImage] = useState<string | null>(null);
 	const [cdigest, setCdigest] = useState<string | null>(null);
 
+	// SP (sp.srmist.edu.in / student portal) captcha — always required after phase 1.
+	const [spCaptchaInput, setSpCaptchaInput] = useState("");
+	const [spCaptchaImage, setSpCaptchaImage] = useState<string | null>(null);
+	const [spState, setSpState] = useState<string | null>(null);
+
 	const [status, setStatus] = useState<number>(0);
 	const [statusMessage, setMessage] = useState("");
+
+	const captchaStage = Boolean(captchaImage || spCaptchaImage);
 
 	const handleBack = useCallback(() => {
 		setCaptchaImage(null);
 		setCdigest(null);
 		setCaptchaInput("");
+		setSpCaptchaImage(null);
+		setSpState(null);
+		setSpCaptchaInput("");
 		setStatus(0);
 		setMessage("");
 	}, []);
 
-	const handleLogin = useCallback(async (account: string, password: string, captcha?: string, cdigestValue?: string) => {
-		setStatus(1);
-		const body: {
-			account: string;
-			password: string;
-			captcha?: string;
-			cdigest?: string;
-		} = {
-			account: account.replaceAll(" ", "").replace("@srmist.edu.in", ""),
-			password: password,
-		};
+	const handleLogin = useCallback(
+		async (
+			account: string,
+			password: string,
+			academiaCaptcha?: string,
+			academiaCdigest?: string,
+			studentPortalCaptcha?: string,
+			studentPortalState?: string,
+		) => {
+			setStatus(1);
 
-		if (captcha && cdigestValue) {
-			body.captcha = captcha;
-			body.cdigest = cdigestValue;
-		}
+			const body: LoginRequestBody = {
+				account: account.replaceAll(" ", "").replace("@srmist.edu.in", ""),
+				password: password,
+			};
+			if (academiaCaptcha && academiaCdigest) {
+				body.captcha = academiaCaptcha;
+				body.cdigest = academiaCdigest;
+			}
+			if (studentPortalCaptcha && studentPortalState) {
+				body.spCaptcha = studentPortalCaptcha;
+				body.spState = studentPortalState;
+			}
 
-		const login = await fetch(`${rotateUrl()}/login`, {
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${token()}`,
-				"content-type": "application/json",
-			},
-			body: JSON.stringify(body),
-		});
+			const login = await fetch(`${rotateUrl()}/login`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token()}`,
+					"content-type": "application/json",
+				},
+				body: JSON.stringify(body),
+			});
 
-		if (!login.ok) {
-			setStatus(-1);
-			setMessage("Server down.");
-			return;
-		}
-
-		const loginResponse = await login.json();
-
-		if (loginResponse.authenticated) {
-			setStatus(2);
-			setMessage("Loading data...");
-			if(!loginResponse.cookies) {
+			if (!login.ok) {
 				setStatus(-1);
-				setMessage("No cookies received. Wrong password.");
+				setMessage("Server down.");
 				return;
 			}
-			setCookie("key", loginResponse.cookies);
-			
-			setCaptchaImage(null);
-			setCdigest(null);
-			setCaptchaInput("");
-			
-			router.push("/academia");
-		} else if (loginResponse?.captcha) {
-			setStatus(0);
-			setCaptchaImage(loginResponse.captcha.image);
-			setCdigest(loginResponse.captcha.cdigest);
-			setMessage(loginResponse.message || "Please enter the CAPTCHA.");
-		} else if (loginResponse?.message) {
-			setStatus(-1);
-			if (loginResponse.message?.includes("Digest"))
-				setMessage(
-					"Seems like this is your first time. Go to academia.srmist.edu.in and setup password!",
-				);
-			else setMessage(loginResponse?.message);
-		}
-	}, [router]);
+
+			const loginResponse: LoginResponse = await login.json();
+
+			if (loginResponse.authenticated) {
+				setStatus(2);
+				setMessage("Loading data...");
+				if (!loginResponse.cookies) {
+					setStatus(-1);
+					setMessage("No cookies received. Wrong password.");
+					return;
+				}
+				setCookie("key", loginResponse.cookies);
+				if (loginResponse.spCookies) {
+					setCookie("sp-key", loginResponse.spCookies);
+				}
+
+				setCaptchaImage(null);
+				setCdigest(null);
+				setCaptchaInput("");
+				setSpCaptchaImage(null);
+				setSpState(null);
+				setSpCaptchaInput("");
+
+				router.push("/academia");
+				return;
+			}
+
+			// Not authenticated. Either captcha(s) needed, or hard error.
+			const academiaPending = Boolean(loginResponse.captcha);
+			const spPending = Boolean(loginResponse.spCaptcha);
+
+			if (academiaPending || spPending) {
+				setStatus(0);
+				if (loginResponse.captcha) {
+					setCaptchaImage(loginResponse.captcha.image);
+					setCdigest(loginResponse.captcha.cdigest);
+				} else {
+					setCaptchaImage(null);
+					setCdigest(null);
+				}
+				if (loginResponse.spCaptcha) {
+					setSpCaptchaImage(loginResponse.spCaptcha.image);
+					setSpState(loginResponse.spCaptcha.state);
+					// Reset typed value because the underlying captcha changed.
+					setSpCaptchaInput("");
+				} else {
+					setSpCaptchaImage(null);
+					setSpState(null);
+				}
+				setMessage(loginResponse.message || "Please enter the CAPTCHA.");
+				return;
+			}
+
+			if (loginResponse.message) {
+				setStatus(-1);
+				if (String(loginResponse.message).includes("Digest")) {
+					setMessage(
+						"Seems like this is your first time. Go to academia.srmist.edu.in and setup password!",
+					);
+				} else {
+					setMessage(loginResponse.message);
+				}
+			}
+		},
+		[router],
+	);
+
+	const submitDisabled =
+		!uid ||
+		!pass ||
+		status === 1 ||
+		status === 2 ||
+		(captchaImage !== null && !captchaInput) ||
+		(spCaptchaImage !== null && !spCaptchaInput);
 
 	return (
 		<form
@@ -113,25 +192,24 @@ export default function Form() {
 				</p>
 			)}
 
-			{status === 0 && captchaImage && statusMessage && (
+			{status === 0 && captchaStage && statusMessage && (
 				<p className="rounded-2xl bg-light-warn-background px-4 py-2 text-light-warn-color dark:bg-dark-warn-background dark:text-dark-warn-color">
 					{statusMessage}
 				</p>
 			)}
 
-			<div className={`relative flex flex-col gap-1 ${captchaImage ? "hidden" : ""}`}>
+			<div
+				className={`relative flex flex-col gap-1 ${captchaStage ? "hidden" : ""}`}
+			>
 				<UidInput uid={uid} setUid={setUid} />
 				<PasswordInput password={pass} setPassword={setPass} />
 			</div>
 
 			{captchaImage && cdigest && (
 				<div className="flex flex-col gap-3">
+					<p className="text-sm opacity-70">Academia CAPTCHA</p>
 					<div className="flex items-center justify-center">
-						<img 
-							src={captchaImage} 
-							alt="CAPTCHA" 
-							className="rounded-xl"
-						/>
+						<img src={captchaImage} alt="Academia CAPTCHA" className="rounded-xl" />
 					</div>
 					<input
 						type="text"
@@ -139,14 +217,32 @@ export default function Form() {
 						onChange={(e) => setCaptchaInput(e.target.value.toUpperCase())}
 						maxLength={10}
 						className="rounded-2xl dark:bg-dark-input bg-light-input dark:text-dark-color text-light-color px-6 py-3 font-medium text-left"
-						placeholder="Enter CAPTCHA"
+						placeholder="Enter Academia CAPTCHA"
+						autoComplete="off"
+					/>
+				</div>
+			)}
+
+			{spCaptchaImage && spState && (
+				<div className="flex flex-col gap-3">
+					<p className="text-sm opacity-70">Student Portal CAPTCHA</p>
+					<div className="flex items-center justify-center">
+						<img src={spCaptchaImage} alt="Student Portal CAPTCHA" className="rounded-xl" />
+					</div>
+					<input
+						type="text"
+						value={spCaptchaInput}
+						onChange={(e) => setSpCaptchaInput(e.target.value)}
+						maxLength={10}
+						className="rounded-2xl dark:bg-dark-input bg-light-input dark:text-dark-color text-light-color px-6 py-3 font-medium text-left"
+						placeholder="Enter Student Portal CAPTCHA"
 						autoComplete="off"
 					/>
 				</div>
 			)}
 
 			<div className="flex flex-row gap-2">
-				{captchaImage && (
+				{captchaStage && (
 					<button
 						type="button"
 						onClick={handleBack}
@@ -157,7 +253,7 @@ export default function Form() {
 					</button>
 				)}
 				<Button
-					disabled={!uid || !pass || status === 1 || status === 2 || (captchaImage !== null && !captchaInput)}
+					disabled={submitDisabled}
 					className={`w-full md:w-fit ${
 						status === 2
 							? "border border-light-success-color bg-light-success-background text-light-success-color dark:border-dark-success-color dark:bg-dark-success-background dark:text-dark-success-color"
@@ -169,16 +265,16 @@ export default function Form() {
 					}`}
 					type="submit"
 					onClick={() => {
-						if (captchaImage && cdigest && captchaInput) {
-							handleLogin(uid, pass, captchaInput, cdigest);
-						} else {
-							handleLogin(uid, pass);
-						}
+						const academiaCaptcha = captchaImage && cdigest && captchaInput ? captchaInput : undefined;
+						const academiaCdigest = captchaImage && cdigest && captchaInput ? cdigest : undefined;
+						const portalCaptcha = spCaptchaImage && spState && spCaptchaInput ? spCaptchaInput : undefined;
+						const portalState = spCaptchaImage && spState && spCaptchaInput ? spState : undefined;
+						handleLogin(uid, pass, academiaCaptcha, academiaCdigest, portalCaptcha, portalState);
 					}}
 				>
 					{status === 1 ? "Authenticating" : status === 2 ? "Success" : "Login"}
 				</Button>
-				{!captchaImage && (
+				{!captchaStage && (
 					<Link
 						href="https://academia.srmist.edu.in/reset"
 						className="border-2 opacity-50 text-light-color dark:text-dark-color border-light-color dark:border-dark-color px-4 py-2 rounded-full text-sm font-medium"
