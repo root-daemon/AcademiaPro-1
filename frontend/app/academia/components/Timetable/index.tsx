@@ -16,6 +16,16 @@ export default function Timetable({
 	cal: CalendarResponse
 }) {
 	const { today, tomorrow } = cal;
+	const hasSchedule = Array.isArray(schedule) && schedule.length > 0;
+	// Calendar day-order can fail independently of timetable scrape. Still show
+	// the grid when we have a schedule, falling back to Day 1.
+	const fallbackDay = {
+		date: "",
+		day: "",
+		dayOrder: "1",
+	};
+	const displayToday = today ?? (hasSchedule ? fallbackDay : undefined);
+	const displayTomorrow = tomorrow ?? undefined;
 
 	return (
 		<section id="timetable">
@@ -33,7 +43,18 @@ export default function Timetable({
 				</div>
 			</div>
 			<div className={"transition duration-150"}>
-				{today || tomorrow ? <TimetableStack schedule={schedule} ophours={ophours} today={today} tomorrow={tomorrow} /> : <div className="text-center text-lg font-semibold">No timetable available</div>}
+				{hasSchedule && displayToday ? (
+					<TimetableStack
+						schedule={schedule}
+						ophours={ophours}
+						today={displayToday}
+						tomorrow={displayTomorrow ?? displayToday}
+					/>
+				) : (
+					<div className="text-center text-lg font-semibold">
+						No timetable available
+					</div>
+				)}
 				<div id="edit-timetable" />
 			</div>
 		</section>
