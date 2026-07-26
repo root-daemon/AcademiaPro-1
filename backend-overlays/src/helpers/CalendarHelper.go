@@ -6,6 +6,7 @@ import (
 	"goscraper/src/types"
 	"goscraper/src/utils"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +31,10 @@ func NewCalendarFetcher(date time.Time, cookie string) *CalendarFetcher {
 
 func (c *CalendarFetcher) GetCalendar() (*types.CalendarResponse, error) {
 	var lastErr string
-	for _, url := range plannerURLs(c.date) {
+	urls := calendarPageURLs(c.date)
+
+	for i := 0; i < len(urls); i++ {
+		url := urls[i]
 		body, status, err := c.fetchPlannerPage(url)
 		if err != nil {
 			lastErr = err.Error()
@@ -41,6 +45,11 @@ func (c *CalendarFetcher) GetCalendar() (*types.CalendarResponse, error) {
 			lastErr = fmt.Sprintf("HTTP %d for %s", status, url)
 			log.Printf("CalendarHelper.GetCalendar: %s", lastErr)
 			continue
+		}
+
+		// Academic_Reports may embed the planner table or link to Academic_Planner_* pages.
+		for _, discovered := range discoverPlannerURLs(body) {
+			urls = appendUniqueURL(urls, discovered)
 		}
 
 		calendar, err := c.parseCalendar(body)
@@ -55,13 +64,13 @@ func (c *CalendarFetcher) GetCalendar() (*types.CalendarResponse, error) {
 			continue
 		}
 
-		log.Printf("CalendarHelper.GetCalendar: using planner %s", url)
+		log.Printf("CalendarHelper.GetCalendar: using page %s", url)
 		calendar.Status = status
 		return calendar, nil
 	}
 
 	if lastErr == "" {
-		lastErr = "no academic planner URL succeeded"
+		lastErr = "no academic calendar URL succeeded"
 	}
 	return &types.CalendarResponse{
 		Error:    true,
@@ -71,9 +80,27 @@ func (c *CalendarFetcher) GetCalendar() (*types.CalendarResponse, error) {
 	}, nil
 }
 
-// plannerURLs returns likely Academic Planner page URLs, newest/most-likely first.
-// Academia renames these each term (e.g. Academic_Planner_2026_27_ODD).
-func plannerURLs(now time.Time) []string {
+// calendarPageURLs prefers the stable Academic_Reports page (browser hash
+// #Academic_Reports), then related report pages, then term-named planners.
+func calendarPageURLs(now time.Time) []string {
+	seen := make(map[string]bool)
+	var urls []string
+	add := func(list ...string) {
+		for _, u := range list {
+			if !seen[u] {
+				seen[u] = true
+				urls = append(urls, u)
+			}
+		}
+	}
+
+	add(
+		academiaPageBase+"Academic_Reports",
+		academiaPageBase+"Academic_Reports_Unified",
+		academiaPageBase+"Academic_Calendar",
+		academiaPageBase+"Day_Order",
+	)
+
 	year := now.Year()
 	month := int(now.Month())
 	isOdd := month >= 6
@@ -96,17 +123,6 @@ func plannerURLs(now time.Time) []string {
 		primary, secondary = "EVEN", "ODD"
 	}
 
-	seen := make(map[string]bool)
-	var urls []string
-	add := func(list ...string) {
-		for _, u := range list {
-			if !seen[u] {
-				seen[u] = true
-				urls = append(urls, u)
-			}
-		}
-	}
-
 	add(build(academicYear, primary)...)
 	add(build(academicYear, secondary)...)
 	add(build(academicYear+1, "ODD")...)
@@ -115,6 +131,35 @@ func plannerURLs(now time.Time) []string {
 	add(build(academicYear-1, "ODD")...)
 	add(academiaPageBase + "Academic_Planner")
 	return urls
+}
+
+var plannerLinkPattern = regexp.MustCompile(`Academic_Planner_[A-Za-z0-9_]+`)
+
+func discoverPlannerURLs(raw string) []string {
+	decoded := utils.ConvertHexToHTML(raw)
+	matches := plannerLinkPattern.FindAllString(decoded, -1)
+	if len(matches) == 0 {
+		matches = plannerLinkPattern.FindAllString(raw, -1)
+	}
+	seen := make(map[string]bool)
+	var urls []string
+	for _, name := range matches {
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		urls = append(urls, academiaPageBase+name)
+	}
+	return urls
+}
+
+func appendUniqueURL(urls []string, url string) []string {
+	for _, existing := range urls {
+		if existing == url {
+			return urls
+		}
+	}
+	return append(urls, url)
 }
 
 func (c *CalendarFetcher) fetchPlannerPage(url string) (string, int, error) {

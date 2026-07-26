@@ -57,6 +57,14 @@ export default function CalendarGrid({
 		}
 	}, [todayRef, month]);
 
+	if (!calendar?.length) {
+		return (
+			<div className="w-full py-16 text-center text-lg font-semibold opacity-70">
+				No calendar available
+			</div>
+		);
+	}
+
 	return (
 		<div className="w-full">
 			<div ref={head} />
